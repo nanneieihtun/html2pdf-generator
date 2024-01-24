@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTML Code Editor</title>
+  </head>
+  <body>
+    <form id="myForm">
+      <label for="text">HTML Code :</label>
+      <textarea id="text" name="text" rows="25" cols="100" required></textarea>
+      <br /> <br />
+      <button type="button" onclick="preview()">Preview</button>
+      <button type="button" onclick="generatePDF()">Generate PDF</button>
+    </form>
+
+    <div id="preview"></div>
+
+    <script>
+      function preview() {
+        const text = document.getElementById("text").value;
+        const previewDiv = document.getElementById("preview");
+        previewDiv.innerHTML = `<p>${text}</p>`;
+      }
+
+      function generatePDF() {
+        const text = document.getElementById("text").value;
+        const previewDiv = document.getElementById("preview");
+        const previewHTML = `<p>${text}</p>`;
+        console.log("HTML code: ", previewHTML);
+
+        fetch("/generate-pdf", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ html: previewHTML }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.clone().blob();
+          })
+          .then((pdfBlob) => {
+            const timestamp = new Date().toISOString().replace(/:/g, "-");
+            const fileName = `generated_${timestamp}.pdf`;
+            const link = document.createElement("a");
+            link.href = window.URL.createObjectURL(pdfBlob);
+            link.download = fileName;
+            link.click();
+            // response.close();
+          })
+          .catch((error) => {
+            console.error("Error generating PDF:", error);
+          });
+      }
+    </script>
+  </body>
+</html>
